@@ -1,0 +1,49 @@
+#  Simple beam on a target with detector
+#  Adam Watts 2022
+#  lengths are in mm, fields is Tesla !  Momentum in MeV
+#______________________________________________________________________
+
+
+#------------------------------- Setup -------------------------------#
+# Set this parameter to 1 to stop particle tracks when they hit material.
+# Must add kill=$kill_aperture to every element to use this feature.
+param kill_aperture=1
+
+# Choose the "physics list", i.e. set of processes to be simulated.
+# Consult the manual to determine the most appropriate physics list for your application!
+# The "default" physics list is QGSP-BERT
+physics QGSP_BERT
+
+# Scaling GUI view from pg 19 of the manual
+g4ui when=4 "/vis/viewer/scaleTo 10 10 1"
+# Make GUI background white
+g4ui when=4 "/vis/viewer/set/background 1 1 1"
+
+# Set default environment material
+param worldMaterial=AIR
+
+# Define the beam starting at (x,y,z) = (0,0,0)
+beam gaussian particle=proton nEvents=1000 x=0 y=0 z=0 sigmaX=1.0 sigmaY=1.0 meanMomentum=120000.0
+
+# Only pay attention to the following particles (saves on calculation time)
+trackcuts keep=proton,mu+,pi+,pi0,kaon+
+
+#---------------------- Define beamline elements ----------------------#
+# Define the target as a box made of some material (copper), and call it a "target" element.
+# Give it a color so it looks nice in the GUI
+box target width=20 height=10 length=100 material=Cu color=1.0,0.75,0.0
+
+# Define a virtual detector, call it "Det". It "captures" any particles that pass through it
+# and prints their information to a readable file. Give it a big enough size that
+# it catches all particles you want to see, and give it a color so it looks good in the GUI.
+virtualdetector Det radius=250.0 color=0,0,0
+
+#---------------------- Place beamline elements -----------------------#
+# Place an instance of the "target" element at x=0, y=0, z=100
+# Rename this target to something unique. This is useful for placing multiple copies of
+# the same element with different names (like several magnets of the same type).
+place target rename=tgt1 z=100
+
+# Place the virtual detector (instance of "Det" element). Rename it to something unique, just like
+# we did with the target.
+place Det rename=detector z=200 format=ascii file=detector.txt
